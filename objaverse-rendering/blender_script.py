@@ -41,9 +41,6 @@ args = parser.parse_args(argv)
 print('===================', args.engine, '===================')
 
 
-
-
-
 def get_ids_of_already_downloaded_objects(objaverse_path = OBJAVERSE_PATH, image_path = IMAGE_PATH):
     ''' 
     Objects from objaverse are stored in form PATH/{gibberish}/{uid}.glb
@@ -64,7 +61,6 @@ def get_ids_of_already_downloaded_objects(objaverse_path = OBJAVERSE_PATH, image
 
     return downloaded_objects
     
-
 
 def download_3d_objects_from_objectverse(nr_objects, nr_processes = PROCESSES):
     '''
