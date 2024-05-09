@@ -1,17 +1,12 @@
-import random
-import objaverse
-import os
+import sys
+print("Python version")
+print(sys.version)
+print("Version info.")
+print(sys.version_info)
+
 import multiprocessing
 import argparse
-import json
-import math
-import os
-import random
 import sys
-import time
-import urllib.request
-import uuid
-from typing import Tuple
 from mathutils import Vector, Matrix
 import numpy as np
 
