@@ -68,6 +68,10 @@ if __name__ == "__main__":
     parser.add_argument("--num_objects", type=int, default=10)
     args = parser.parse_args()
     objects = download_3d_objects_from_objectverse(args.num_objects) # objects in form dict{uid: filepath}
+    print(objects)
+    # remove filenames.txt 
+    if os.path.exists('filenames.txt'):
+        os.remove('filenames.txt')
 
     # print filepaths
     with open('filenames.txt', 'w') as f:

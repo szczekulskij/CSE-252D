@@ -7,17 +7,6 @@ IMAGE_PATH = '''~/masters-work/spring '24/CSE-252D/objaverse-rendering/objaverse
 if not os.path.exists(IMAGE_PATH): os.makedirs(IMAGE_PATH)
 if not os.path.exists(OBJAVERSE_PATH): os.makedirs(OBJAVERSE_PATH)
 
-
-
-
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
     import multiprocessing
     import argparse
@@ -32,9 +21,9 @@ if __name__ == "__main__":
     parser.add_argument('--nr_images', type=int, default=8, help='Number of processes to use') # number of images to render per object
     parser.add_argument("--engine", type=str, default="CYCLES", choices=["CYCLES", "BLENDER_EEVEE"])
     parser.add_argument("--scale", type=float, default=0.8)
-    parser.add_argument("--camera_dist", type=int, default=1.2)
+    parser.add_argument("--camera_dist", type=float, default=1.2)
     parser.add_argument("--img_resolution", type=int, default=512)
-    parser.add_argument("--filename", type=int, default=10)
+    parser.add_argument("--filename", type=str, default=10)
     argv = sys.argv[sys.argv.index("--") + 1 :]
     args = parser.parse_args(argv)
 
@@ -59,12 +48,12 @@ if __name__ == "__main__":
 
     # Defuault light params, we'll be changing them later
     light.energy = 3000
-    # bpy.data.objects["Point"].location[2] = 0.5
-    # bpy.data.objects["Point"].scale[0] = 100
-    # bpy.data.objects["Point"].scale[1] = 100
-    # bpy.data.objects["Point"].scale[2] = 100
-    light.location = 0, 0, 0.5
-    light.scale = 100, 100, 100
+    bpy.data.objects["Point"].location[2] = 0.5
+    bpy.data.objects["Point"].scale[0] = 100
+    bpy.data.objects["Point"].scale[1] = 100
+    bpy.data.objects["Point"].scale[2] = 100
+    # light.location = 0, 0, 0.5
+    # light.scale = 100, 100, 100
 
 
     # Copy paste from zero123/objaverse-rendering/blender_script.py
@@ -92,7 +81,7 @@ if __name__ == "__main__":
     # Set the device_type
     bpy.context.preferences.addons[
         "cycles"
-    ].preferences.compute_device_type = "CUDA" # or "OPENCL"
+    ].preferences.compute_device_type = "METAL" # or "CUDA" or "OPENCL"
     # multhi-threading
     processes = multiprocessing.cpu_count() - 2 # 2 is the number of threads that are always running
 
@@ -162,6 +151,8 @@ if __name__ == "__main__":
     # load the glb model
     def load_object(object_path: str) -> None:
         """Loads a glb model into the scene."""
+        if not os.path.isfile(object_path):
+            raise RuntimeError(f"File {object_path} does not exist")
         if object_path.endswith(".glb"):
             bpy.ops.import_scene.gltf(filepath=object_path, merge_vertices=True)
         elif object_path.endswith(".fbx"):
@@ -184,7 +175,7 @@ if __name__ == "__main__":
     #     return x,y,z
 
 
-    def randomize_lighting(bpy, light):
+    def randomize_lighting(light):
         def sample_spherical(radius_min=1.5, radius_max=2.0, maxz=1.6, minz=-0.75):
             correct = False
             while not correct:
@@ -198,11 +189,14 @@ if __name__ == "__main__":
         
         x,y,z = sample_spherical()
         light.energy = 3000
-        light.location = x,y,z
+        # light.location = x,y,z
+        bpy.data.objects["Point"].location[0] = x
+        bpy.data.objects["Point"].location[1] = y
+        bpy.data.objects["Point"].location[2] = z
 
-        direction = - light.location
+        direction = - Vector((x, y, z)) # watch out here
         rot_quat = direction.to_track_quat('-Z', 'Y')
-        light.rotation_euler = rot_quat.to_euler()
+        # light.rotation_euler = rot_quat.to_euler()
         return x,y,z
 
 
@@ -246,7 +240,7 @@ if __name__ == "__main__":
     #######################################################
     '''Main Functions'''
     #######################################################
-    def render_and_save_images_for_a_single_object(object_uid, nr_images):
+    def render_and_save_images_for_a_single_object(filepath, object_uid, nr_images):
         '''
         renders and save images for a single object
         in IMAGE_PATH we'll be saving in a following format:
@@ -258,11 +252,12 @@ if __name__ == "__main__":
             object_uid: str
             nr_images: int
         '''
+        # 0. Create folder for images
         os.makedirs(f"{IMAGE_PATH}/{object_uid}", exist_ok=True)
         # 1. reset scene after previous object renderings
         reset_scene() # doesn't reset camera and light
         # 2. load new object
-        load_object(f"{OBJAVERSE_PATH}/{object_uid}.glb")
+        load_object(filepath)
         # 3. normalize scene so that the object is always in the center
         normalize_scene()
 
@@ -287,13 +282,13 @@ if __name__ == "__main__":
 
             # 7. Save the lightning params in a txt file
             coordinates = f"{x},{y},{z}"
-            RT = get_3x4_RT_matrix_from_blender(bpy.data.lights["Point"])
+            # RT = get_3x4_RT_matrix_from_blender(bpy.data.lights["Point"])
             with open(f"{IMAGE_PATH}/{object_uid}/{i:03d}.txt", "w") as f:
                 f.write(coordinates + "\n")
-                f.write(str(RT))
+                # f.write(str(RT))
                 f.close()
 
 
     object_uid = args.filename.split("/")[-1].split(".")[0]
     print("Rendering images for object with uid:", object_uid)
-    render_and_save_images_for_a_single_object(scene, cam_constraint, object_uid, args.nr_images)
+    render_and_save_images_for_a_single_object(args.filename, object_uid, args.nr_images)
