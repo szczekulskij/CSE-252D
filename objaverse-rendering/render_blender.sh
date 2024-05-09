@@ -19,25 +19,18 @@ img_resolution=512
 python3 -m pip install bpy
 filenames=$(python3 objaverse_download.py --num_objects $num_objects)
 
-for filename in $filenames;
-do
-    echo $filename
-done
 
-: '
 #3. Run blender script for each object
-# for filename in $filenames; 
-# do
-#     blender --python-use-system-env -b -P blender_script.py -- \
-#         --nr_objects $num_objects \
-#         --nr_images $num_images \
-#         --engine CYCLES \
-#         --scale 0.8 \
-#         --camera_dist 1.2  \
-#         --img_resolution $img_resolution \
-#         --filename $filename
-# done
+for filename in $filenames; 
+do
+    blender -b -P blender_script.py -- \
+        --nr_images $num_images \
+        --engine CYCLES \
+        --scale 0.8 \
+        --camera_dist 1.2  \
+        --img_resolution $img_resolution \
+        --filename $filename \
+done
 
 # #4. Delete 3d objects (so they dont take up space
 # python3 objaverse_delete.py --filenames $filenames
-'
