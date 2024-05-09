@@ -66,7 +66,13 @@ def download_3d_objects_from_objectverse(nr_objects, nr_processes):
     return objects
 
 
-
+def delete_objects_based_on_uids(uids):
+    '''Objects from objaverse are stored in form PATH/{gibberish}/{uid}.glb'''
+    for uid in uids:
+        for root, dirs, files in os.walk(OBJAVERSE_PATH):
+            for file in files:
+                if file.endswith(".glb") and file.split(".")[0] == uid:
+                    os.remove(file)
 
 
 #######################################################
@@ -155,7 +161,7 @@ def load_object(bpy, object_path: str) -> None:
 #     return x,y,z
 
 
-def randomize_lighting(bpy, light2):
+def randomize_lighting(bpy, light):
     def sample_spherical(radius_min=1.5, radius_max=2.0, maxz=1.6, minz=-0.75):
         correct = False
         while not correct:
@@ -168,24 +174,61 @@ def randomize_lighting(bpy, light2):
         return vec
     
     x,y,z = sample_spherical()
-    light2.energy = 3000
-    light2.location = x,y,z
+    light.energy = 3000
+    light.location = x,y,z
 
-    direction = - light2.location
+    direction = - light.location
     rot_quat = direction.to_track_quat('-Z', 'Y')
-    light2.rotation_euler = rot_quat.to_euler()
+    light.rotation_euler = rot_quat.to_euler()
     return x,y,z
 
 
+def get_3x4_RT_matrix_from_blender(light):
+    # bcam stands for blender camera
+    # R_bcam2cv = Matrix(
+    #     ((1, 0,  0),
+    #     (0, 1, 0),
+    #     (0, 0, 1)))
+
+    # Transpose since the rotation is object rotation, 
+    # and we want coordinate rotation
+    # R_world2bcam = cam.rotation_euler.to_matrix().transposed()
+    # T_world2bcam = -1*R_world2bcam @ location
+    #
+    # Use matrix_world instead to account for all constraints
+    location, rotation = light.matrix_world.decompose()[0:2]
+    R_world2bcam = rotation.to_matrix().transposed()
+
+    # Convert camera location to translation vector used in coordinate changes
+    # T_world2bcam = -1*R_world2bcam @ cam.location
+    # Use location from matrix_world to account for constraints:     
+    T_world2bcam = -1*R_world2bcam @ location
+
+    # # Build the coordinate transform matrix from world to computer vision camera
+    # R_world2cv = R_bcam2cv@R_world2bcam
+    # T_world2cv = R_bcam2cv@T_world2bcam
+
+    # put into 3x4 matrix
+    RT = Matrix((
+        R_world2bcam[0][:] + (T_world2bcam[0],),
+        R_world2bcam[1][:] + (T_world2bcam[1],),
+        R_world2bcam[2][:] + (T_world2bcam[2],)
+        ))
+    return RT
+
+
+
+
+
 #######################################################
-'''Main Function'''
+'''Main Functions'''
 #######################################################
 def render_and_save_images_for_a_single_object(bpy, scene, cam_constraint, object_uid, nr_images):
     '''
     renders and save images for a single object
     in IMAGE_PATH we'll be saving in a following format:
     images - IMAGE_PATH/{uid}/{hash_light_params}.png
-    lightning params - IMAGE_PATH/{uid}/{hash_light_params}.json
+    lightning params - IMAGE_PATH/{uid}/{hash_light_params}.txt
 
     params:
         bpy: blender context (has to be passed from the main script)
@@ -199,8 +242,44 @@ def render_and_save_images_for_a_single_object(bpy, scene, cam_constraint, objec
     load_object(bpy, f"{OBJAVERSE_PATH}/{object_uid}.glb")
     # 3. normalize scene so that the object is always in the center
     normalize_scene(bpy)
+
+    # 4. Set camera location 
+    cam = scene.objects["Camera"]
+    cam.location = (0, 1.2, 0) # should that be different ? How does it tie together with the transformation matrx of light that we output as our data label?
+
     
     # 4. Create an empty object to track (helpful for camera and light setup)
     empty = bpy.data.objects.new("Empty", None)
     scene.collection.objects.link(empty)
     cam_constraint.target = empty
+
+    for i in range(nr_images):
+        # 5. randomize lightning
+        x,y,z = randomize_lighting(bpy, bpy.data.lights["Point"])
+
+        # 6. Render the image
+        render_path = f"{IMAGE_PATH}/{object_uid}/{i:03d}.png"
+        scene.render.filepath = render_path
+        bpy.ops.render.render(write_still=True)
+
+        # 7. Save the lightning params in a txt file
+        coordinates = f"{x},{y},{z}"
+        RT = get_3x4_RT_matrix_from_blender(bpy.data.lights["Point"])
+        with open(f"{IMAGE_PATH}/{object_uid}/{i:03d}.txt", "w") as f:
+            f.write(coordinates + "\n")
+            f.write(str(RT))
+            f.close()
+
+
+def main(nr_objects, nr_images, nr_processes, bpy, scene, cam_constraint):
+    # 1. Download objects and save them in the default path
+    # objects in form dict{uid: obj}
+    objects = download_3d_objects_from_objectverse(nr_objects, nr_processes)
+    objects_uids = list(objects.keys())
+    # 2. For each object render and save images and then delete
+    for object_uid in objects_uids:
+        # render and save images for a single object
+        render_and_save_images_for_a_single_object(bpy, scene, cam_constraint, object_uid, nr_images)
+
+    # 3. Delete the 3d objects, since they're no longer needed
+    delete_objects_based_on_uids(objects_uids)
