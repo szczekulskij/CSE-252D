@@ -19,19 +19,14 @@ import bpy
 from mathutils import Vector
 
 
-PROCESSES = multiprocessing.cpu_count() - 2 # leave some cpus for other stuff to not kill the PC
-OBJAVERSE_PATH = "~/.objaverse/hf-objaverse-v1/glbs/" # default path for where the objaverse objects will be stored
-IMAGE_PATH = '''~/masters-work/spring '24/CSE-252D/objaverse-rendering/objaverse_data''' # default path for where the rendered objaverse images will be stored
-# if IMAGE_PATH or OBJAVERSE_PATH is not found, it will be created
-if not os.path.exists(IMAGE_PATH): os.makedirs(IMAGE_PATH)
-if not os.path.exists(OBJAVERSE_PATH): os.makedirs(OBJAVERSE_PATH)
-
 parser = argparse.ArgumentParser(description='Render 3D objects from objaverse')
 parser.add_argument('--nr_objects', type=int, default=10, help='Number of objects to render') # number of objects to render
 parser.add_argument('--nr_images', type=int, default=8, help='Number of processes to use') # number of images to render per object
 parser.add_argument("--engine", type=str, default="CYCLES", choices=["CYCLES", "BLENDER_EEVEE"])
 parser.add_argument("--scale", type=float, default=0.8)
 parser.add_argument("--camera_dist", type=int, default=1.2)
+parser.add_argument("--img_resolution", type=int, default=512)
+
 
 
 
@@ -40,38 +35,57 @@ args = parser.parse_args(argv)
 
 print('===================', args.engine, '===================')
 
+# Copy paste from zero123/objaverse-rendering/blender_script.py
+context = bpy.context
+scene = context.scene
+render = scene.render
+cam = scene.objects["Camera"]
+cam.location = (0, 1.2, 0)
+cam.data.lens = 35
+cam.data.sensor_width = 32
+cam_constraint = cam.constraints.new(type="TRACK_TO")
+cam_constraint.track_axis = "TRACK_NEGATIVE_Z"
+cam_constraint.up_axis = "UP_Y"
 
-def get_ids_of_already_downloaded_objects(objaverse_path = OBJAVERSE_PATH, image_path = IMAGE_PATH):
-    ''' 
-    Objects from objaverse are stored in form PATH/{gibberish}/{uid}.glb
-    Rendering (2d images) are stored in form PATH/{uid}/{light_params_camera_params}.png
-    '''
-    downloaded_objects = set()
-    for root, dirs, files in os.walk(OBJAVERSE_PATH):
-        for file in files:
-            if file.endswith(".glb"):
-                uid = file.split(".")[0]
-                downloaded_objects.add(uid)
 
-    for root, dirs, files in os.walk(IMAGE_PATH):
-        for file in files:
-            if file.endswith(".png"):
-                uid = file.split("/")[0]
-                downloaded_objects.add(uid)
+# setup lightning (new part)
+bpy.ops.object.light_add(type="POINT", radius=1, align="WORLD", location=(0, 0, 0))
+light2 = bpy.data.lights["Point"]
 
-    return downloaded_objects
-    
+# Defuault light params, we'll be changing them later
+light2.energy = 3000
+# bpy.data.objects["Point"].location[2] = 0.5
+# bpy.data.objects["Point"].scale[0] = 100
+# bpy.data.objects["Point"].scale[1] = 100
+# bpy.data.objects["Point"].scale[2] = 100
+light2.location = 0, 0, 0.5
+light2.scale = 100, 100, 100
 
-def download_3d_objects_from_objectverse(nr_objects, nr_processes = PROCESSES):
-    '''
-    saves to "~/.objaverse/hf-objaverse-v1/glbs/" path by default
-    '''
-    allUids = objaverse.load_uids()
-    downloaded_uids = get_ids_of_already_downloaded_objects()
-    uids = [uid for uid in allUids if uid not in downloaded_uids] # remove already downloaded objects (quick operation, dw)
-    uids = random.sample(uids, nr_objects) # get random objects
-    objects = objaverse.load_objects(
-        uids=uids,
-        download_processes=nr_processes
-    )
-    return objects
+
+# Copy paste from zero123/objaverse-rendering/blender_script.py
+render.engine = args.engine
+render.image_settings.file_format = "PNG"
+render.image_settings.color_mode = "RGBA"
+render.resolution_x = args.img_resolution
+render.resolution_y = args.img_resolution
+render.resolution_percentage = 100
+
+# Copy paste from zero123/objaverse-rendering/blender_script.py
+scene.cycles.device = "GPU"
+scene.cycles.samples = 128
+scene.cycles.diffuse_bounces = 1
+scene.cycles.glossy_bounces = 1
+scene.cycles.transparent_max_bounces = 3
+scene.cycles.transmission_bounces = 3
+scene.cycles.filter_width = 0.01
+scene.cycles.use_denoising = True
+scene.render.film_transparent = True
+
+
+# Might require change for M2
+bpy.context.preferences.addons["cycles"].preferences.get_devices()
+# Set the device_type
+bpy.context.preferences.addons[
+    "cycles"
+].preferences.compute_device_type = "CUDA" # or "OPENCL"
+

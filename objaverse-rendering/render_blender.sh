@@ -12,4 +12,5 @@ blender -b -P blender_script.py -- \
         --nr_images 8 \
         --engine CYCLES \
         --scale 0.8 \
-        --camera_dist 1.2 
+        --camera_dist 1.2  \
+        --img_resolution 512 \
