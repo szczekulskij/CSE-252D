@@ -70,6 +70,6 @@ if __name__ == "__main__":
     objects = download_3d_objects_from_objectverse(args.num_objects) # objects in form dict{uid: filepath}
 
     # print filepaths
-    for _, filepath in objects.items():
-        print(filepath)
-    
+    with open('filenames.txt', 'w') as f:
+        for _, filepath in objects.items():
+            f.write(filepath + '\n')
