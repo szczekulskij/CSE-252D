@@ -159,6 +159,8 @@ def instantiate_from_config(config):
 
 def get_obj_from_str(string, reload=False):
     module, cls = string.rsplit(".", 1)
+    print("module: ", module)
+    print("cls: ", cls)
     if reload:
         module_imp = importlib.import_module(module)
         importlib.reload(module_imp)
@@ -273,3 +275,17 @@ class AdamWwithEMAandWings(optim.Optimizer):
                 ema_param.mul_(cur_ema_decay).add_(param.float(), alpha=1 - cur_ema_decay)
 
         return loss
+    
+
+if __name__ == "__main__":
+    from omegaconf import OmegaConf
+    import sys
+    sys.path.append('/Users/szczekulskij/masters-work/spring \'24/CSE-252D/zero123_og_repo')
+    # Test loading config 
+    configPath = ["configs/sd-objaverse-finetune-c_concat-256.yaml"]
+    configs = [OmegaConf.load(cfg) for cfg in configPath]
+    # cli = OmegaConf.from_dotlist(unknown)
+    # config = OmegaConf.merge(*configs, cli)
+    config = OmegaConf.merge(*configs)
+    print("config: ", config)
+    model = instantiate_from_config(config.model)
