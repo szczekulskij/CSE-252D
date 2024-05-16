@@ -74,7 +74,8 @@ if __name__ == "__main__":
 
     # Copy paste from zero123/objaverse-rendering/blender_script.py
     scene.cycles.device = "GPU"
-    scene.cycles.samples = 128
+    # scene.cycles.samples = 128
+    scene.cycles.samples = 1
     scene.cycles.diffuse_bounces = 1
     scene.cycles.glossy_bounces = 1
     scene.cycles.transparent_max_bounces = 3
@@ -171,7 +172,8 @@ if __name__ == "__main__":
 
 
     def randomize_lighting():
-        def sample_spherical(radius_min=1.5, radius_max=2.0, maxz=1.6, minz=-0.75):
+        # def sample_spherical(radius_min=1.5, radius_max=2.0, maxz=1.6, minz=-0.75):
+        def sample_spherical(radius_min=1.5, radius_max=1.5, maxz=1.6, minz=-0.75):
             correct = False
             while not correct:
                 vec = np.random.uniform(-1, 1, 3)
@@ -184,6 +186,7 @@ if __name__ == "__main__":
         
         x,y,z = sample_spherical()
         # light.energy = 3000
+        # light.energy = 1000
         light.energy = 1000
         # light.location = x,y,z
         bpy.data.objects[LIGHT_TYPE].location[0] = x

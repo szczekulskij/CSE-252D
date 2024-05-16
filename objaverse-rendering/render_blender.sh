@@ -11,8 +11,8 @@ Had to be setup this way in a shell script, since any script run from blender HA
 
 alias blender=/Applications/Blender.app/Contents/MacOS/Blender 
 # 1. Set up variables
-num_objects=5
-num_images=4 # per object
+num_objects=20
+num_images=10 # per object
 img_resolution=512
 
 # 2. Download 3d objects
