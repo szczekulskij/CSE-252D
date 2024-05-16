@@ -1,11 +1,15 @@
 import math
 import os 
 
-OBJAVERSE_PATH = "~/.objaverse/hf-objaverse-v1/glbs/" # default path for where the objaverse objects will be stored
-IMAGE_PATH = '''~/masters-work/spring '24/CSE-252D/objaverse-rendering/objaverse_data''' # default path for where the rendered objaverse images will be stored
+OBJAVERSE_PATH = os.path.expanduser("~/.objaverse/hf-objaverse-v1/glbs/") # default path for where the objaverse objects will be stored
+IMAGE_PATH = os.path.expanduser('''~/masters-work/spring '24/CSE-252D/objaverse-rendering/objaverse_data''') # default path for where the rendered objaverse images will be stored
 # if IMAGE_PATH or OBJAVERSE_PATH is not found, it will be created
 if not os.path.exists(IMAGE_PATH): os.makedirs(IMAGE_PATH)
 if not os.path.exists(OBJAVERSE_PATH): os.makedirs(OBJAVERSE_PATH)
+
+
+# LIGHT_TYPE = "Point" # type of light to be used in the scene
+LIGHT_TYPE = "Sun" # type of light to be used in the scene
 
 if __name__ == "__main__":
     import multiprocessing
@@ -43,15 +47,19 @@ if __name__ == "__main__":
 
 
     # setup lightning (new part)
-    bpy.ops.object.light_add(type="POINT", radius=1, align="WORLD", location=(0, 0, 0))
-    light = bpy.data.lights["Point"]
+    # string to upper LIGHT_TYPE
+    bpy.ops.object.light_add(type=LIGHT_TYPE.upper(), radius=1, align="WORLD", location=(0, 0, 0))
+    print("before")
+    light = bpy.data.lights[LIGHT_TYPE]
+    print("after")
 
     # Defuault light params, we'll be changing them later
-    light.energy = 3000
-    bpy.data.objects["Point"].location[2] = 0.5
-    bpy.data.objects["Point"].scale[0] = 100
-    bpy.data.objects["Point"].scale[1] = 100
-    bpy.data.objects["Point"].scale[2] = 100
+    # light.energy = 3000
+    light.energy = 1000
+    # bpy.data.objects[LIGHT_TYPE].location[2] = 0.5
+    # bpy.data.objects[LIGHT_TYPE].scale[0] = 100
+    # bpy.data.objects[LIGHT_TYPE].scale[1] = 100
+    # bpy.data.objects[LIGHT_TYPE].scale[2] = 100
     # light.location = 0, 0, 0.5
     # light.scale = 100, 100, 100
 
@@ -76,7 +84,7 @@ if __name__ == "__main__":
     scene.render.film_transparent = True
 
 
-    # Might require change for M2
+    # Might require change for devices other than M2
     bpy.context.preferences.addons["cycles"].preferences.get_devices()
     # Set the device_type
     bpy.context.preferences.addons[
@@ -95,6 +103,7 @@ if __name__ == "__main__":
         # delete everything that isn't part of a camera or a light
         for obj in bpy.data.objects:
             if obj.type not in {"CAMERA", "LIGHT"}:
+            # if obj.type not in {"CAMERA"}:
                 bpy.data.objects.remove(obj, do_unlink=True)
         # delete all the materials
         for material in bpy.data.materials:
@@ -161,21 +170,7 @@ if __name__ == "__main__":
             raise ValueError(f"Unsupported file type: {object_path}")
 
 
-
-
-    # similar sample as for the camera position in the original paper's code
-
-
-    # def randomize_lighting(bpy, light2):
-    #     x,y,z = random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(0.5, 1.5)
-    #     light2.energy = 3000
-    #     bpy.data.objects["Point"].location[0] = x
-    #     bpy.data.objects["Point"].location[1] = y
-    #     bpy.data.objects["Point"].location[2] = z
-    #     return x,y,z
-
-
-    def randomize_lighting(light):
+    def randomize_lighting():
         def sample_spherical(radius_min=1.5, radius_max=2.0, maxz=1.6, minz=-0.75):
             correct = False
             while not correct:
@@ -188,53 +183,20 @@ if __name__ == "__main__":
             return vec
         
         x,y,z = sample_spherical()
-        light.energy = 3000
+        # light.energy = 3000
+        light.energy = 1000
         # light.location = x,y,z
-        bpy.data.objects["Point"].location[0] = x
-        bpy.data.objects["Point"].location[1] = y
-        bpy.data.objects["Point"].location[2] = z
+        bpy.data.objects[LIGHT_TYPE].location[0] = x
+        bpy.data.objects[LIGHT_TYPE].location[1] = y
+        bpy.data.objects[LIGHT_TYPE].location[2] = z
+
+        # set angles to point towards origin based on the coordinates x,y,z
+
 
         direction = - Vector((x, y, z)) # watch out here
         rot_quat = direction.to_track_quat('-Z', 'Y')
-        # light.rotation_euler = rot_quat.to_euler()
+        bpy.data.objects[LIGHT_TYPE].rotation_euler = rot_quat.to_euler()
         return x,y,z
-
-
-    def get_3x4_RT_matrix_from_blender(light):
-        # bcam stands for blender camera
-        # R_bcam2cv = Matrix(
-        #     ((1, 0,  0),
-        #     (0, 1, 0),
-        #     (0, 0, 1)))
-
-        # Transpose since the rotation is object rotation, 
-        # and we want coordinate rotation
-        # R_world2bcam = cam.rotation_euler.to_matrix().transposed()
-        # T_world2bcam = -1*R_world2bcam @ location
-        #
-        # Use matrix_world instead to account for all constraints
-        location, rotation = light.matrix_world.decompose()[0:2]
-        R_world2bcam = rotation.to_matrix().transposed()
-
-        # Convert camera location to translation vector used in coordinate changes
-        # T_world2bcam = -1*R_world2bcam @ cam.location
-        # Use location from matrix_world to account for constraints:     
-        T_world2bcam = -1*R_world2bcam @ location
-
-        # # Build the coordinate transform matrix from world to computer vision camera
-        # R_world2cv = R_bcam2cv@R_world2bcam
-        # T_world2cv = R_bcam2cv@T_world2bcam
-
-        # put into 3x4 matrix
-        RT = Matrix((
-            R_world2bcam[0][:] + (T_world2bcam[0],),
-            R_world2bcam[1][:] + (T_world2bcam[1],),
-            R_world2bcam[2][:] + (T_world2bcam[2],)
-            ))
-        return RT
-
-
-
 
 
     #######################################################
@@ -244,8 +206,8 @@ if __name__ == "__main__":
         '''
         renders and save images for a single object
         in IMAGE_PATH we'll be saving in a following format:
-        images - IMAGE_PATH/{uid}/{hash_light_params}.png
-        lightning params - IMAGE_PATH/{uid}/{hash_light_params}.txt
+        images - IMAGE_PATH/{uid}/{object_uid}/{iter}.png
+        lightning params - IMAGE_PATH/{uid}/{object_uid}/{iter}.txt
 
         params:
             bpy: blender context (has to be passed from the main script)
@@ -273,7 +235,7 @@ if __name__ == "__main__":
 
         for i in range(nr_images):
             # 5. randomize lightning
-            x,y,z = randomize_lighting(bpy.data.lights["Point"])
+            x,y,z = randomize_lighting()
 
             # 6. Render the image
             render_path = f"{IMAGE_PATH}/{object_uid}/{i:03d}.png"

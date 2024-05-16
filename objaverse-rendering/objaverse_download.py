@@ -17,6 +17,7 @@ from mathutils import Vector, Matrix
 from blender_script import OBJAVERSE_PATH, IMAGE_PATH
 
 MAX_PROCESSES = multiprocessing.cpu_count()
+CATEGORY = "car"
 
 
 #######################################################

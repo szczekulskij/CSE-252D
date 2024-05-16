@@ -11,13 +11,13 @@ Had to be setup this way in a shell script, since any script run from blender HA
 
 alias blender=/Applications/Blender.app/Contents/MacOS/Blender 
 # 1. Set up variables
-num_objects=10
+num_objects=5
 num_images=4 # per object
 img_resolution=512
 
 # 2. Download 3d objects
 # python3 -m pip install -r requirements_blender.txt # can be commented out if already installed
-python3 objaverse_download.py --num_objects $num_objects
+python3 objaverse_download.py --num_objects $num_objects # this will download blender files and save filenames in filenames.txt file (it'll delete the file if it existed before running this script)
 filenames=$(cat filenames.txt)
 
 # 2.1 Some robustness
