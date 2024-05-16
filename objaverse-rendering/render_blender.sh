@@ -1,15 +1,14 @@
 #!/bin/bash
 
 : '
-add comments here
 Robust - itll only download 3d objects that havent been rendered yet
 To specify path for images/3d objects download look into blender_script.py
 
 Had to be setup this way in a shell script, since any script run from blender HAS to use blenders python 
-(and therefore cant have any dependencies installed)
+(and therefore cant have any dependencies installed such as objaverse package)
 '
 
-alias blender=/Applications/Blender.app/Contents/MacOS/Blender 
+alias blender=/Applications/Blender.app/Contents/MacOS/Blender # pointer to blender executable
 # 1. Set up variables
 num_objects=20
 num_images=10 # per object
@@ -48,5 +47,5 @@ do
         --filename $filename 
 done
 
-# #4. Delete 3d objects (so they dont take up space
+# #4. Delete 3d objects (so they dont take up space)
 python3 objaverse_delete.py --filenames $filenames

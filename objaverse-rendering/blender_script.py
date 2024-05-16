@@ -37,13 +37,6 @@ if __name__ == "__main__":
     context = bpy.context
     scene = context.scene
     render = scene.render
-    cam = scene.objects["Camera"]
-    cam.location = (0, 1.2, 0) # should that be different ?
-    cam.data.lens = 35
-    cam.data.sensor_width = 32
-    cam_constraint = cam.constraints.new(type="TRACK_TO")
-    cam_constraint.track_axis = "TRACK_NEGATIVE_Z"
-    cam_constraint.up_axis = "UP_Y"
 
 
     # setup lightning (new part)
@@ -55,7 +48,8 @@ if __name__ == "__main__":
 
     # Defuault light params, we'll be changing them later
     # light.energy = 3000
-    light.energy = 1000
+    # light.energy = 1000
+    light.energy = 400
     # bpy.data.objects[LIGHT_TYPE].location[2] = 0.5
     # bpy.data.objects[LIGHT_TYPE].scale[0] = 100
     # bpy.data.objects[LIGHT_TYPE].scale[1] = 100
@@ -187,7 +181,7 @@ if __name__ == "__main__":
         x,y,z = sample_spherical()
         # light.energy = 3000
         # light.energy = 1000
-        light.energy = 1000
+        light.energy = 400
         # light.location = x,y,z
         bpy.data.objects[LIGHT_TYPE].location[0] = x
         bpy.data.objects[LIGHT_TYPE].location[1] = y
@@ -228,7 +222,19 @@ if __name__ == "__main__":
 
         # 4. Set camera location 
         cam = scene.objects["Camera"]
-        cam.location = (0, 1.2, 0) # should that be different ? How does it tie together with the transformation matrx of light that we output as our data label?
+        cam.location = (0, 1.2, 0) # should that be different ?
+        # cam.direction = - (0, 1.2, 0)
+        # copy rest of the code from before
+
+
+        
+        cam.data.lens = 35
+        cam.data.sensor_width = 32
+        cam_constraint = cam.constraints.new(type="TRACK_TO")
+        cam_constraint.track_axis = "TRACK_NEGATIVE_Z"
+        cam_constraint.up_axis = "UP_Y"
+        # cam = scene.objects["Camera"]
+        # cam.location = (0, 1.2, 0) # should that be different ? How does it tie together with the transformation matrx of light that we output as our data label?
 
         
         # 4. Create an empty object to track (helpful for camera and light setup)
