@@ -163,3 +163,5 @@ cython_debug/
 *.filenames
 *.npy
 *.txt
+zero123_og_repo/*
+*.ckpt
