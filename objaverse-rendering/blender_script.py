@@ -38,6 +38,22 @@ if __name__ == "__main__":
     scene = context.scene
     render = scene.render
 
+    # new addition - completely reset the scene
+    """Resets the scene to a clean state only not camera."""
+    # delete everything that isn't part of a camera or a light
+    for obj in bpy.data.objects:
+        if obj.type not in {"CAMERA"}:
+            bpy.data.objects.remove(obj, do_unlink=True)
+    # delete all the materials
+    for material in bpy.data.materials:
+        bpy.data.materials.remove(material, do_unlink=True)
+    # delete all the textures
+    for texture in bpy.data.textures:
+        bpy.data.textures.remove(texture, do_unlink=True)
+    # delete all the images
+    for image in bpy.data.images:
+        bpy.data.images.remove(image, do_unlink=True)
+
 
     # setup lightning (new part)
     # string to upper LIGHT_TYPE
@@ -109,7 +125,6 @@ if __name__ == "__main__":
         # delete all the images
         for image in bpy.data.images:
             bpy.data.images.remove(image, do_unlink=True)
-
 
 
     # normalzie each scene so it's in the same scale and coordinate system

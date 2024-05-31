@@ -78,19 +78,18 @@ def download_3d_objects_from_objectverse(
             raise Exception("Couldn't find any objects that haven't been downloaded and processed yet.")
     else: # download only from specific categories
         uids_to_download = set()
-        start_time = time.time()
-        TIMEOUT = 2 * 60
         categories = set(categories)
 
-        while len(uids_to_download) < nr_objects and time.time() - start_time <= TIMEOUT:
-            uid_categories = get_categories_given_uids(allUids)
-            uids = (uid for uid in allUids if any(category in uid_categories[uid] for category in categories))
-            uids = [uid for uid in uids if uid not in uids_to_download]
-            print("found uids: ", len(uids))
-            uids_to_download.update(uids)
+        uid_categories = get_categories_given_uids(allUids)
+        uids = (uid for uid in allUids if any(category in uid_categories[uid] for category in categories))
+        uids = [uid for uid in uids if uid not in uids_to_download]
+        print("found uids: ", len(uids))
+        uids_to_download.update(uids)
 
-            if len(uids_to_download) > nr_objects:
-                uids_to_download = set(itertools.islice(uids_to_download, nr_objects))
+        if len(uids_to_download) > nr_objects:
+            # take a random subset of the uids
+            uids_to_download = random.sample(uids_to_download, len(uids_to_download))
+            uids_to_download = set(itertools.islice(uids_to_download, nr_objects))
 
         if len(uids_to_download) == 0:
             raise Exception("Couldn't find any objects in the given categories that haven't been downloaded yet. Try again with different categories.")
