@@ -268,12 +268,12 @@ if __name__ == "__main__":
             # 7. Save the lightning params in a txt file
             coordinates = f"{x},{y},{z}"
             # RT = get_3x4_RT_matrix_from_blender(bpy.data.lights["Point"])
-            with open(f"{IMAGE_PATH}/{object_uid}/{i:03d}.txt", "w") as f:
-                f.write(coordinates + "\n")
-                # f.write(str(RT))
-                f.close()
+            # with open(f"{IMAGE_PATH}/{object_uid}/{i:03d}.txt", "w") as f:
+            #     f.write(coordinates + "\n")
+            #     # f.write(str(RT))
+            #     f.close()
             # save coordinates to .npy
-            # np.save(f"{IMAGE_PATH}/{object_uid}/{i:03d}.npy", np.array([x,y,z]))
+            np.save(f"{IMAGE_PATH}/{object_uid}/{i:03d}.npy", np.array([x,y,z]))
 
 
     object_uid = args.filename.split("/")[-1].split(".")[0]
