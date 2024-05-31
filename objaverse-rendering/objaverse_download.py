@@ -19,8 +19,6 @@ from mathutils import Vector, Matrix
 from blender_script import OBJAVERSE_PATH, IMAGE_PATH
 
 MAX_PROCESSES = multiprocessing.cpu_count()
-CATEGORY = "car"
-
 
 #######################################################
 '''Functions specific to objaverse download'''
@@ -62,8 +60,8 @@ def download_3d_objects_from_objectverse(
     '''
     saves to "~/.objaverse/hf-objaverse-v1/glbs/" path by default
     '''
+    annotations = objaverse.load_annotations(uids)
     def get_categories_given_uids(uids):
-        annotations = objaverse.load_annotations(uids)
         return {uid: [item['name'] for item in annotations[uid]['tags']] for uid in uids}
 
     assert type(categories) == list, "categories should be a list of strings"
@@ -71,20 +69,19 @@ def download_3d_objects_from_objectverse(
     downloaded_uids = get_ids_of_already_downloaded_objects()
     allUids = [uid for uid in allUids if uid not in downloaded_uids]
 
-    if not categories:
+    if not categories: # don't limit to any categories
         uids_to_download = random.sample(allUids, nr_objects)
         if len(uids_to_download) == 0:
             raise Exception("Couldn't find any objects that haven't been downloaded and processed yet.")
-    else:
+    else: # download only from specific categories
         uids_to_download = set()
         start_time = time.time()
-        TIMEOUT = 5 * 60
+        TIMEOUT = 2 * 60
         categories = set(categories)
 
         while len(uids_to_download) < nr_objects and time.time() - start_time <= TIMEOUT:
-            sample_uids = random.sample(allUids, 100)
-            uid_categories = get_categories_given_uids(sample_uids)
-            uids = (uid for uid in sample_uids if any(category in uid_categories[uid] for category in categories))
+            uid_categories = get_categories_given_uids(allUids)
+            uids = (uid for uid in allUids if any(category in uid_categories[uid] for category in categories))
             uids = [uid for uid in uids if uid not in uids_to_download]
             print("found uids: ", len(uids))
             uids_to_download.update(uids)
