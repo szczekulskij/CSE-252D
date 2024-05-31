@@ -10,9 +10,11 @@ Had to be setup this way in a shell script, since any script run from blender HA
 
 alias blender=/Applications/Blender.app/Contents/MacOS/Blender # pointer to blender executable
 # 1. Set up variables
-num_objects=20
-num_images=10 # per object
-img_resolution=512
+num_objects=5
+num_images=5 # per object
+# img_resolution=512
+img_resolution=256
+# img_resolution=128
 
 # 2. Download 3d objects
 # python3 -m pip install -r requirements_blender.txt # can be commented out if already installed

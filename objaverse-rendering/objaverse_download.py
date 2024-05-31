@@ -47,7 +47,9 @@ def get_ids_of_already_downloaded_objects():
     return downloaded_objects
     
 
-GOOD_CATEGORIES = ["car", "vehicle", "automobile", "robot", "machine", "weapon"]
+GOOD_CATEGORIES = ["car", "vehicle", "automobile", "robot", "machine", "weapon",
+                   "food", 
+                   ]
 
 
 

@@ -69,7 +69,7 @@ if __name__ == "__main__":
     # Copy paste from zero123/objaverse-rendering/blender_script.py
     scene.cycles.device = "GPU"
     # scene.cycles.samples = 128
-    scene.cycles.samples = 1
+    scene.cycles.samples = 1 # pat attention - light bouncing
     scene.cycles.diffuse_bounces = 1
     scene.cycles.glossy_bounces = 1
     scene.cycles.transparent_max_bounces = 3
