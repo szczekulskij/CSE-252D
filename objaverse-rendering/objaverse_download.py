@@ -54,18 +54,21 @@ GOOD_CATEGORIES = ["car", "vehicle", "automobile", "robot", "machine", "weapon",
 def download_3d_objects_from_objectverse(
         nr_objects, 
         nr_processes = MAX_PROCESSES - 2, 
-        categories = ["car", "vehicle", "automobile", "robot", "machine", "weapon"],
+        categories = ["car", "vehicle", "automobile", "robot", 
+                      "car", "wood", "robot", "tree", "skull", "lamp", "animegirl", "cat", "dog", "ship", "human",
+                      "man", "woman", "plane", "airplane", "aircraft", "computer", "apple", "batman", "spiderman",
+                      ],
         # categories = [],
         ):
     '''
     saves to "~/.objaverse/hf-objaverse-v1/glbs/" path by default
     '''
-    annotations = objaverse.load_annotations(uids)
+    allUids = objaverse.load_uids()
+    annotations = objaverse.load_annotations(allUids)
     def get_categories_given_uids(uids):
         return {uid: [item['name'] for item in annotations[uid]['tags']] for uid in uids}
 
     assert type(categories) == list, "categories should be a list of strings"
-    allUids = objaverse.load_uids()
     downloaded_uids = get_ids_of_already_downloaded_objects()
     allUids = [uid for uid in allUids if uid not in downloaded_uids]
 

@@ -49,7 +49,7 @@ if __name__ == "__main__":
     # Defuault light params, we'll be changing them later
     # light.energy = 3000
     # light.energy = 1000
-    light.energy = 400
+    light.energy = 200
     # bpy.data.objects[LIGHT_TYPE].location[2] = 0.5
     # bpy.data.objects[LIGHT_TYPE].scale[0] = 100
     # bpy.data.objects[LIGHT_TYPE].scale[1] = 100
@@ -142,6 +142,7 @@ if __name__ == "__main__":
         bbox_min, bbox_max = scene_bbox()
         scale = 1 / max(bbox_max - bbox_min)
         for obj in scene_root_objects():
+            print(obj)
             obj.scale = obj.scale * scale
         # Apply scale to matrix_world.
         bpy.context.view_layer.update()
@@ -167,21 +168,34 @@ if __name__ == "__main__":
 
     def randomize_lighting():
         # def sample_spherical(radius_min=1.5, radius_max=2.0, maxz=1.6, minz=-0.75):
-        def sample_spherical(radius_min=1.5, radius_max=1.5, maxz=1.6, minz=-0.75):
-            correct = False
-            while not correct:
-                vec = np.random.uniform(-1, 1, 3)
-        #         vec[2] = np.abs(vec[2])
-                radius = np.random.uniform(radius_min, radius_max, 1)
-                vec = vec / np.linalg.norm(vec, axis=0) * radius[0]
-                if maxz > vec[2] > minz:
-                    correct = True
+        # def sample_spherical(radius_min=1.5, radius_max=1.5, maxz=1.6, minz=-0.75):
+        #     correct = False
+        #     while not correct:
+        #         vec = np.random.uniform(-1, 1, 3)
+        # #         vec[2] = np.abs(vec[2])
+        #         radius = np.random.uniform(radius_min, radius_max, 1)
+        #         vec = vec / np.linalg.norm(vec, axis=0) * radius[0]
+        #         if maxz > vec[2] > minz:
+        #             correct = True
+        #     return vec
+
+        def sample_spherical():
+            # new implementation by Jan, where we limit to only quarter of the sphere
+            # camera is set at (0,1.2,0) 
+            # the object is normalized to fit within box that goe from [-0.5,0.5] for each dimension
+            y = np.random.uniform(0.1,1.5) # light from in front of the camera, never behind
+            x = np.random.uniform(-1, 1) # light can be on either side of the object
+            z = np.random.uniform(-0.3, 0.8) # light can be only at the level of the object or above
+
+            vec = np.array([x,y,z])
+            # vec = vec / np.linalg.norm(vec, axis=0) 
             return vec
+            
         
         x,y,z = sample_spherical()
         # light.energy = 3000
         # light.energy = 1000
-        light.energy = 400
+        light.energy = 200
         # light.location = x,y,z
         bpy.data.objects[LIGHT_TYPE].location[0] = x
         bpy.data.objects[LIGHT_TYPE].location[1] = y
@@ -258,6 +272,8 @@ if __name__ == "__main__":
                 f.write(coordinates + "\n")
                 # f.write(str(RT))
                 f.close()
+            # save coordinates to .npy
+            # np.save(f"{IMAGE_PATH}/{object_uid}/{i:03d}.npy", np.array([x,y,z]))
 
 
     object_uid = args.filename.split("/")[-1].split(".")[0]
