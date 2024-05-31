@@ -11,7 +11,7 @@ Had to be setup this way in a shell script, since any script run from blender HA
 alias blender=/Applications/Blender.app/Contents/MacOS/Blender # pointer to blender executable
 # 1. Set up variables
 # num_objects=2000
-num_objects=10
+num_objects=100
 num_images=8 # per object
 # img_resolution=512
 img_resolution=256
