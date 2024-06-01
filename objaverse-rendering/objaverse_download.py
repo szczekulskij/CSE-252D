@@ -82,6 +82,8 @@ def download_3d_objects_from_objectverse(
 
         uid_categories = get_categories_given_uids(allUids)
         uids = (uid for uid in allUids if any(category in uid_categories[uid] for category in categories))
+        # ensure they're not in "downloaded_uids"
+        uids = [uid for uid in uids if uid not in downloaded_uids]
         uids = [uid for uid in uids if uid not in uids_to_download]
         print("found uids: ", len(uids))
         uids_to_download.update(uids)
