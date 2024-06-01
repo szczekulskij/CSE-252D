@@ -19,8 +19,6 @@ from mathutils import Vector, Matrix
 from blender_script import OBJAVERSE_PATH, IMAGE_PATH
 
 MAX_PROCESSES = multiprocessing.cpu_count()
-CATEGORY = "car"
-
 
 #######################################################
 '''Functions specific to objaverse download'''
@@ -47,48 +45,53 @@ def get_ids_of_already_downloaded_objects():
     return downloaded_objects
     
 
-GOOD_CATEGORIES = ["car", "vehicle", "automobile", "robot", "machine", "weapon"]
+GOOD_CATEGORIES = ["car", "vehicle", "automobile", "robot", "machine", "weapon",
+                   "food", 
+                   ]
 
 
 
 def download_3d_objects_from_objectverse(
         nr_objects, 
         nr_processes = MAX_PROCESSES - 2, 
-        categories = ["car", "vehicle", "automobile", "robot", "machine", "weapon"],
+        categories = ["car", "vehicle", "automobile", "robot", 
+                      "car", "wood", "robot", "tree", "skull", "lamp", "animegirl", "cat", "dog", "ship", "human",
+                      "man", "woman", "plane", "airplane", "aircraft", "computer", "apple", "batman", "spiderman",
+                      ],
         # categories = [],
         ):
     '''
     saves to "~/.objaverse/hf-objaverse-v1/glbs/" path by default
     '''
+    allUids = objaverse.load_uids()
+    annotations = objaverse.load_annotations(allUids)
     def get_categories_given_uids(uids):
-        annotations = objaverse.load_annotations(uids)
         return {uid: [item['name'] for item in annotations[uid]['tags']] for uid in uids}
 
     assert type(categories) == list, "categories should be a list of strings"
-    allUids = objaverse.load_uids()
     downloaded_uids = get_ids_of_already_downloaded_objects()
     allUids = [uid for uid in allUids if uid not in downloaded_uids]
 
-    if not categories:
+    if not categories: # don't limit to any categories
         uids_to_download = random.sample(allUids, nr_objects)
         if len(uids_to_download) == 0:
             raise Exception("Couldn't find any objects that haven't been downloaded and processed yet.")
-    else:
+    else: # download only from specific categories
         uids_to_download = set()
-        start_time = time.time()
-        TIMEOUT = 5 * 60
         categories = set(categories)
 
-        while len(uids_to_download) < nr_objects and time.time() - start_time <= TIMEOUT:
-            sample_uids = random.sample(allUids, 100)
-            uid_categories = get_categories_given_uids(sample_uids)
-            uids = (uid for uid in sample_uids if any(category in uid_categories[uid] for category in categories))
-            uids = [uid for uid in uids if uid not in uids_to_download]
-            print("found uids: ", len(uids))
-            uids_to_download.update(uids)
+        uid_categories = get_categories_given_uids(allUids)
+        uids = (uid for uid in allUids if any(category in uid_categories[uid] for category in categories))
+        # ensure they're not in "downloaded_uids"
+        uids = [uid for uid in uids if uid not in downloaded_uids]
+        uids = [uid for uid in uids if uid not in uids_to_download]
+        print("found uids: ", len(uids))
+        uids_to_download.update(uids)
 
-            if len(uids_to_download) > nr_objects:
-                uids_to_download = set(itertools.islice(uids_to_download, nr_objects))
+        if len(uids_to_download) > nr_objects:
+            # take a random subset of the uids
+            uids_to_download = random.sample(uids_to_download, len(uids_to_download))
+            uids_to_download = set(itertools.islice(uids_to_download, nr_objects))
 
         if len(uids_to_download) == 0:
             raise Exception("Couldn't find any objects in the given categories that haven't been downloaded yet. Try again with different categories.")

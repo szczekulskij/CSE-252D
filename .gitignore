@@ -166,6 +166,7 @@ cython_debug/
 # *.txt
 zero123_og_repo/*
 *.ckpt
+.DS_Store
 *.png
 zero123/limited_categories/*
 zero123/CLIP*

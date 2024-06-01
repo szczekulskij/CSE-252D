@@ -38,6 +38,22 @@ if __name__ == "__main__":
     scene = context.scene
     render = scene.render
 
+    # new addition - completely reset the scene
+    """Resets the scene to a clean state only not camera."""
+    # delete everything that isn't part of a camera or a light
+    for obj in bpy.data.objects:
+        if obj.type not in {"CAMERA"}:
+            bpy.data.objects.remove(obj, do_unlink=True)
+    # delete all the materials
+    for material in bpy.data.materials:
+        bpy.data.materials.remove(material, do_unlink=True)
+    # delete all the textures
+    for texture in bpy.data.textures:
+        bpy.data.textures.remove(texture, do_unlink=True)
+    # delete all the images
+    for image in bpy.data.images:
+        bpy.data.images.remove(image, do_unlink=True)
+
 
     # setup lightning (new part)
     # string to upper LIGHT_TYPE
@@ -49,7 +65,7 @@ if __name__ == "__main__":
     # Defuault light params, we'll be changing them later
     # light.energy = 3000
     # light.energy = 1000
-    light.energy = 400
+    light.energy = 200
     # bpy.data.objects[LIGHT_TYPE].location[2] = 0.5
     # bpy.data.objects[LIGHT_TYPE].scale[0] = 100
     # bpy.data.objects[LIGHT_TYPE].scale[1] = 100
@@ -69,7 +85,7 @@ if __name__ == "__main__":
     # Copy paste from zero123/objaverse-rendering/blender_script.py
     scene.cycles.device = "GPU"
     # scene.cycles.samples = 128
-    scene.cycles.samples = 1
+    scene.cycles.samples = 1 # pat attention - light bouncing
     scene.cycles.diffuse_bounces = 1
     scene.cycles.glossy_bounces = 1
     scene.cycles.transparent_max_bounces = 3
@@ -111,7 +127,6 @@ if __name__ == "__main__":
             bpy.data.images.remove(image, do_unlink=True)
 
 
-
     # normalzie each scene so it's in the same scale and coordinate system
     def normalize_scene():
         def scene_root_objects():
@@ -142,6 +157,7 @@ if __name__ == "__main__":
         bbox_min, bbox_max = scene_bbox()
         scale = 1 / max(bbox_max - bbox_min)
         for obj in scene_root_objects():
+            print(obj)
             obj.scale = obj.scale * scale
         # Apply scale to matrix_world.
         bpy.context.view_layer.update()
@@ -167,21 +183,34 @@ if __name__ == "__main__":
 
     def randomize_lighting():
         # def sample_spherical(radius_min=1.5, radius_max=2.0, maxz=1.6, minz=-0.75):
-        def sample_spherical(radius_min=1.5, radius_max=1.5, maxz=1.6, minz=-0.75):
-            correct = False
-            while not correct:
-                vec = np.random.uniform(-1, 1, 3)
-        #         vec[2] = np.abs(vec[2])
-                radius = np.random.uniform(radius_min, radius_max, 1)
-                vec = vec / np.linalg.norm(vec, axis=0) * radius[0]
-                if maxz > vec[2] > minz:
-                    correct = True
+        # def sample_spherical(radius_min=1.5, radius_max=1.5, maxz=1.6, minz=-0.75):
+        #     correct = False
+        #     while not correct:
+        #         vec = np.random.uniform(-1, 1, 3)
+        # #         vec[2] = np.abs(vec[2])
+        #         radius = np.random.uniform(radius_min, radius_max, 1)
+        #         vec = vec / np.linalg.norm(vec, axis=0) * radius[0]
+        #         if maxz > vec[2] > minz:
+        #             correct = True
+        #     return vec
+
+        def sample_spherical():
+            # new implementation by Jan, where we limit to only quarter of the sphere
+            # camera is set at (0,1.2,0) 
+            # the object is normalized to fit within box that goe from [-0.5,0.5] for each dimension
+            y = np.random.uniform(0.1,1.5) # light from in front of the camera, never behind
+            x = np.random.uniform(-1, 1) # light can be on either side of the object
+            z = np.random.uniform(-0.3, 0.8) # light can be only at the level of the object or above
+
+            vec = np.array([x,y,z])
+            # vec = vec / np.linalg.norm(vec, axis=0) 
             return vec
+            
         
         x,y,z = sample_spherical()
         # light.energy = 3000
         # light.energy = 1000
-        light.energy = 400
+        light.energy = 200
         # light.location = x,y,z
         bpy.data.objects[LIGHT_TYPE].location[0] = x
         bpy.data.objects[LIGHT_TYPE].location[1] = y
@@ -254,10 +283,12 @@ if __name__ == "__main__":
             # 7. Save the lightning params in a txt file
             coordinates = f"{x},{y},{z}"
             # RT = get_3x4_RT_matrix_from_blender(bpy.data.lights["Point"])
-            with open(f"{IMAGE_PATH}/{object_uid}/{i:03d}.txt", "w") as f:
-                f.write(coordinates + "\n")
-                # f.write(str(RT))
-                f.close()
+            # with open(f"{IMAGE_PATH}/{object_uid}/{i:03d}.txt", "w") as f:
+            #     f.write(coordinates + "\n")
+            #     # f.write(str(RT))
+            #     f.close()
+            # save coordinates to .npy
+            np.save(f"{IMAGE_PATH}/{object_uid}/{i:03d}.npy", np.array([x,y,z]))
 
 
     object_uid = args.filename.split("/")[-1].split(".")[0]
