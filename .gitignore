@@ -2,7 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+**/.DS_Store
+**/*/data
 # C extensions
 *.so
 
@@ -159,10 +160,16 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-*.png
+# *.png
 *.filenames
 *.npy
-*.txt
+# *.txt
 zero123_og_repo/*
 *.ckpt
 .DS_Store
+*.png
+zero123/limited_categories/*
+zero123/CLIP*
+zero123/log*
+zero123/taming-transformers*
+limited_categories_data.zip
