@@ -24,6 +24,7 @@ import os, sys
 import webdataset as wds
 import math
 from torch.utils.data.distributed import DistributedSampler
+import pandas as pd
 
 # Some hacky things to make experimentation easier
 def make_transform_multi_folder_data(paths, caption_files=None, **kwargs):
@@ -293,27 +294,31 @@ class ObjaverseData(Dataset):
         data = {}
         total_view = self.total_view
         index_target, index_cond = random.sample(range(total_view), 2) # without replacement
-        filename = os.path.join(self.root_dir, self.paths[index])
+        filename = os.path.join(*[self.root_dir,'data', self.paths[index]])
 
         if self.return_paths:
             data["path"] = str(filename)
         
         color = [1., 1., 1., 1.]
 
-        try:
-            target_im = self.process_im(self.load_im(os.path.join(filename, '%03d.png' % index_target), color))
-            cond_im = self.process_im(self.load_im(os.path.join(filename, '%03d.png' % index_cond), color))
-            target_RT = np.load(os.path.join(filename, '%03d.txt' % index_target))
-            cond_RT = np.load(os.path.join(filename, '%03d.txt' % index_cond))
-        except:
-            # very hacky solution, sorry about this
-            filename = os.path.join(self.root_dir, '692db5f2d3a04bb286cb977a7dba903e_1') # this one we know is valid
-            target_im = self.process_im(self.load_im(os.path.join(filename, '%03d.png' % index_target), color))
-            cond_im = self.process_im(self.load_im(os.path.join(filename, '%03d.png' % index_cond), color))
-            target_RT = np.load(os.path.join(filename, '%03d.txt' % index_target))
-            cond_RT = np.load(os.path.join(filename, '%03d.txt' % index_cond))
-            target_im = torch.zeros_like(target_im)
-            cond_im = torch.zeros_like(cond_im)
+        # try:
+        # target_im = self.process_im(self.load_im(os.path.join(filename, '%03d.png' % index_target), color))
+        # cond_im = self.process_im(self.load_im(os.path.join(filename, '%03d.png' % index_cond), color))
+        # target_RT = np.load(os.path.join(filename, '%03d.txt' % index_target))
+        # cond_RT = np.load(os.path.join(filename, '%03d.txt' % index_cond))
+        target_im = self.process_im(self.load_im(filename +'_%03d.png' % index_target, color))
+        cond_im = self.process_im(self.load_im(filename +'_%03d.png'  % index_cond, color))
+        target_RT = np.load(filename +'_%03d.npy'  % index_target)[None, :]
+        cond_RT = np.load(filename +'_%03d.npy' % index_cond)[None, :]
+        # except:
+        #     # very hacky solution, sorry about this
+        #     filename = os.path.join(self.root_dir, '692db5f2d3a04bb286cb977a7dba903e_1') # this one we know is valid
+        #     target_im = self.process_im(self.load_im(os.path.join(filename, '%03d.png' % index_target), color))
+        #     cond_im = self.process_im(self.load_im(os.path.join(filename, '%03d.png' % index_cond), color))
+        #     target_RT = np.load(os.path.join(filename, '%03d.txt' % index_target))
+        #     cond_RT = np.load(os.path.join(filename, '%03d.txt' % index_cond))
+        #     target_im = torch.zeros_like(target_im)
+        #     cond_im = torch.zeros_like(cond_im)
 
         data["image_target"] = target_im
         data["image_cond"] = cond_im
