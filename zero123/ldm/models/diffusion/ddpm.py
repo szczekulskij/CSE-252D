@@ -750,7 +750,11 @@ class LatentDiffusion(DDPM):
         with torch.enable_grad():
             clip_emb = self.get_learned_conditioning(xc).detach()
             null_prompt = self.get_learned_conditioning([""]).detach()
+            # torch.where(prompt_mask, null_prompt, clip_emb) # 768-d
+            # T[:, None, :] # 3-d  --> 771
+            # print(torch.cat([torch.where(prompt_mask, null_prompt, clip_emb), T[:, None, :]], dim=-1).shape)
             cond["c_crossattn"] = [self.cc_projection(torch.cat([torch.where(prompt_mask, null_prompt, clip_emb), T[:, None, :]], dim=-1))]
+            # print(cond["c_crossattn"][0].shape)
         cond["c_concat"] = [input_mask * self.encode_first_stage((xc.to(self.device))).mode().detach()]
         out = [z, cond]
         if return_first_stage_outputs:
@@ -867,6 +871,7 @@ class LatentDiffusion(DDPM):
 
     def forward(self, x, c, *args, **kwargs):
         t = torch.randint(0, self.num_timesteps, (x.shape[0],), device=self.device).long()
+        # print(x.shape, t.shape, c)
         if self.model.conditioning_key is not None:
             assert c is not None
             # if self.cond_stage_trainable:
@@ -1019,8 +1024,7 @@ class LatentDiffusion(DDPM):
 
         loss_simple = self.get_loss(model_output, target, mean=False).mean([1, 2, 3])
         loss_dict.update({f'{prefix}/loss_simple': loss_simple.mean()})
-
-        logvar_t = self.logvar[t].to(self.device)
+        logvar_t = self.logvar[t.cpu()].to(self.device)
         loss = loss_simple / torch.exp(logvar_t) + logvar_t
         # loss = loss_simple / torch.exp(self.logvar) + self.logvar
         if self.learn_logvar:
@@ -1445,6 +1449,7 @@ class DiffusionWrapper(pl.LightningModule):
         self.diffusion_model = instantiate_from_config(diff_model_config)
         self.conditioning_key = conditioning_key
         assert self.conditioning_key in [None, 'concat', 'crossattn', 'hybrid', 'adm', 'hybrid-adm']
+        print(f'Conditioning key: {self.conditioning_key}')
 
     def forward(self, x, t, c_concat: list = None, c_crossattn: list = None, c_adm=None):
         if self.conditioning_key is None:
@@ -1458,9 +1463,14 @@ class DiffusionWrapper(pl.LightningModule):
             cc = torch.cat(c_crossattn, 1)
             out = self.diffusion_model(x, t, context=cc)
         elif self.conditioning_key == 'hybrid':
+            # print(x.shape, len(c_concat), c_concat[0].shape, len(c_crossattn), c_crossattn[0].shape)
+            # x: (batch, channel (4), 32, 32), c_concat: x-shape, 
             xc = torch.cat([x] + c_concat, dim=1)
+            # print(xc.shape)
             cc = torch.cat(c_crossattn, 1)
+            # print(cc.shape)
             out = self.diffusion_model(xc, t, context=cc)
+            # print(out.shape)
         elif self.conditioning_key == 'hybrid-adm':
             assert c_adm is not None
             xc = torch.cat([x] + c_concat, dim=1)
