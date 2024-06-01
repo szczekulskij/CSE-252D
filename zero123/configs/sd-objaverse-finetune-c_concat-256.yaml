@@ -79,12 +79,12 @@ data:
     train:
       validation: False
       image_transforms:
-        size: 128
+        size: 256
 
     validation:
       validation: True
       image_transforms:
-        size: 128
+        size: 256
 
 
 lightning:
