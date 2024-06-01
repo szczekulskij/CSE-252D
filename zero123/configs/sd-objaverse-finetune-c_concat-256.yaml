@@ -73,7 +73,7 @@ data:
   target: ldm.data.simple.ObjaverseDataModuleFromConfig
   params:
     root_dir: '/root/CV-project-workspace/CSE-252D/zero123'
-    batch_size: 120
+    batch_size: 60
     num_workers: 0
     total_view: 4
     train:
