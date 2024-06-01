@@ -166,3 +166,9 @@ cython_debug/
 # *.txt
 zero123_og_repo/*
 *.ckpt
+*.png
+zero123/limited_categories/*
+zero123/CLIP*
+zero123/log*
+zero123/taming-transformers*
+limited_categories_data.zip
