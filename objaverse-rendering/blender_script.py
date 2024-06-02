@@ -183,28 +183,28 @@ if __name__ == "__main__":
 
     def randomize_lighting():
         # def sample_spherical(radius_min=1.5, radius_max=2.0, maxz=1.6, minz=-0.75):
-        # def sample_spherical(radius_min=1.5, radius_max=1.5, maxz=1.6, minz=-0.75):
-        #     correct = False
-        #     while not correct:
-        #         vec = np.random.uniform(-1, 1, 3)
-        # #         vec[2] = np.abs(vec[2])
-        #         radius = np.random.uniform(radius_min, radius_max, 1)
-        #         vec = vec / np.linalg.norm(vec, axis=0) * radius[0]
-        #         if maxz > vec[2] > minz:
-        #             correct = True
-        #     return vec
-
-        def sample_spherical():
-            # new implementation by Jan, where we limit to only quarter of the sphere
-            # camera is set at (0,1.2,0) 
-            # the object is normalized to fit within box that goe from [-0.5,0.5] for each dimension
-            y = np.random.uniform(0.1,1.5) # light from in front of the camera, never behind
-            x = np.random.uniform(-1, 1) # light can be on either side of the object
-            z = np.random.uniform(-0.3, 0.8) # light can be only at the level of the object or above
-
-            vec = np.array([x,y,z])
-            # vec = vec / np.linalg.norm(vec, axis=0) 
+        def sample_spherical(radius_min=1.5, radius_max=1.5, maxz=1.6, minz=-0.75):
+            correct = False
+            while not correct:
+                vec = np.random.uniform(-1, 1, 3)
+        #         vec[2] = np.abs(vec[2])
+                radius = np.random.uniform(radius_min, radius_max, 1)
+                vec = vec / np.linalg.norm(vec, axis=0) * radius[0]
+                if maxz > vec[2] > minz:
+                    correct = True
             return vec
+
+        # def sample_spherical():
+        #     # new implementation by Jan, where we limit to only quarter of the sphere
+        #     # camera is set at (0,1.2,0) 
+        #     # the object is normalized to fit within box that goe from [-0.5,0.5] for each dimension
+        #     y = np.random.uniform(0.1,1.5) # light from in front of the camera, never behind
+        #     x = np.random.uniform(-1, 1) # light can be on either side of the object
+        #     z = np.random.uniform(-0.3, 0.8) # light can be only at the level of the object or above
+
+        #     vec = np.array([x,y,z])
+        #     # vec = vec / np.linalg.norm(vec, axis=0) 
+        #     return vec
             
         
         x,y,z = sample_spherical()
