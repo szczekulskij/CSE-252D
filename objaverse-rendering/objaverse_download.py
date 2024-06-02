@@ -37,10 +37,8 @@ def get_ids_of_already_downloaded_objects():
                 downloaded_objects.add(uid)
 
     for root, dirs, files in os.walk(IMAGE_PATH):
-        for file in files:
-            if file.endswith(".png"):
-                uid = file.split("/")[0]
-                downloaded_objects.add(uid)
+        for dir in dirs: 
+            downloaded_objects.add(dir)
 
     return downloaded_objects
     
