@@ -173,3 +173,5 @@ zero123/CLIP*
 zero123/log*
 zero123/taming-transformers*
 limited_categories_data.zip
+*.txt
+*.npy
