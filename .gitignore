@@ -175,3 +175,5 @@ zero123/taming-transformers*
 limited_categories_data.zip
 *.txt
 *.npy
+*.zip
+*txt
