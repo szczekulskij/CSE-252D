@@ -1,5 +1,6 @@
 model:
-  base_learning_rate: 1.0e-04
+  # base_learning_rate: 1.0e-04
+  base_learning_rate: 3.0e-04
   target: ldm.models.diffusion.ddpm.LatentDiffusion
   params:
     linear_start: 0.00085
@@ -73,6 +74,7 @@ data:
   target: ldm.data.simple.ObjaverseDataModuleFromConfig
   params:
     root_dir: '/root/CV-project-workspace/CSE-252D/zero123'
+    # batch_size: 192
     batch_size: 60
     num_workers: 0
     total_view: 4
@@ -97,7 +99,8 @@ lightning:
     image_logger:
       target: main.ImageLogger
       params:
-        batch_frequency: 2
+        batch_frequency: 500
+        # batch_frequency: 2
         max_images: 32
         increase_log_steps: False
         log_first_step: True
