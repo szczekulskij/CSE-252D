@@ -94,6 +94,7 @@ lightning:
   metrics_over_trainsteps_checkpoint: True
   modelcheckpoint:
     params:
+      # every_n_train_steps: 5000
       every_n_train_steps: 2000 # 350 * 2000/60 / 5 [epoch * (data_size/batch_size) / nr_of_checkpoints_we_want]
   callbacks:
     image_logger:
