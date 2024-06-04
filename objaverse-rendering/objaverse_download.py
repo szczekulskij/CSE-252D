@@ -52,10 +52,10 @@ GOOD_CATEGORIES = ["car", "vehicle", "automobile", "robot", "machine", "weapon",
 def download_3d_objects_from_objectverse(
         nr_objects, 
         nr_processes = MAX_PROCESSES - 2, 
-        categories = ["vehicle", "automobile", "car", "tree", "skull", "lamp", "animegirl", "cat", "dog", "ship", "human", "girl", "boy", "human", "humanoid",
-                      "man", "woman", "plane", "airplane", "aircraft", "computer", "apple", "batman", "spiderman",
-                      ],
-        # categories = [],
+        # categories = ["vehicle", "automobile", "car", "tree", "skull", "lamp", "animegirl", "cat", "dog", "ship", "human", "girl", "boy", "human", "humanoid",
+        #               "man", "woman", "plane", "airplane", "aircraft", "computer", "apple", "batman", "spiderman",
+        #               ],
+        categories = [],
         ):
     '''
     saves to "~/.objaverse/hf-objaverse-v1/glbs/" path by default
@@ -70,6 +70,7 @@ def download_3d_objects_from_objectverse(
     allUids = [uid for uid in allUids if uid not in downloaded_uids]
 
     if not categories: # don't limit to any categories
+        allUids = [uid for uid in allUids if uid not in downloaded_uids]
         uids_to_download = random.sample(allUids, nr_objects)
         if len(uids_to_download) == 0:
             raise Exception("Couldn't find any objects that haven't been downloaded and processed yet.")
