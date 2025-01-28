@@ -3,10 +3,10 @@
 alias blender=/Applications/Blender.app/Contents/MacOS/Blender # pointer to blender executable
 
 # 1. Set following variables
-filename=""  # path to 3d object file
+filename="example_obj/Pbr/base.obj"  # path to 3d object file
 num_images=10
 img_resolution=256
-image_path= "~/Desktop/blender_output"
+image_path= "/Users/szczekulskij/Desktop/blender_output" # path where rendered 2d images will get saved to
 
 # 2. If image path does not exist, create it
 if [ ! -d "$image_path" ]; then
@@ -27,5 +27,3 @@ blender -b -P blender_script.py -- \
     --camera_dist 1.2  \
     --img_resolution $img_resolution \
     --filename $filename 
-
-echo "Done rendering images for object: $filename"

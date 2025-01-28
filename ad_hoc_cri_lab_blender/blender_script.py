@@ -192,6 +192,8 @@ def load_object(filepath: str) -> None:
         bpy.ops.import_scene.gltf(filepath=filepath, merge_vertices=True)
     elif filepath.endswith(".fbx"):
         bpy.ops.import_scene.fbx(filepath=filepath)
+    elif filepath.endswith(".obj"):
+        bpy.ops.wm.obj_import(filepath=filepath)
     else:
         raise ValueError(f"Unsupported file type: {filepath}")
 
@@ -221,7 +223,7 @@ def sample_spherical(radius_min=1.5, radius_max=2.0, maxz=1.6, minz=-0.75):
             correct = True
     return vec
 
-def set_camera_location(elevation, azimuth, distance):
+def set_camera_location():
     # from https://blender.stackexchange.com/questions/18530/
     x, y, z = sample_spherical(radius_min=1.5, radius_max=2.2, maxz=2.2, minz=-2.2)
     camera = bpy.data.objects["Camera"]
@@ -233,10 +235,11 @@ def set_camera_location(elevation, azimuth, distance):
     return camera
 
 def randomize_camera():
-    elevation = random.uniform(0., 90.)
-    azimuth = random.uniform(0., 360)
-    distance = random.uniform(0.8, 1.6)
-    return set_camera_location(elevation, azimuth, distance)
+    # elevation = random.uniform(0., 90.)
+    # azimuth = random.uniform(0., 360)
+    # distance = random.uniform(0.8, 1.6)
+    # return set_camera_location(elevation, azimuth, distance)
+    return set_camera_location()
 
 
 #######################################################
