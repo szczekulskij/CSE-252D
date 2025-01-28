@@ -177,3 +177,4 @@ limited_categories_data.zip
 *.npy
 *.zip
 *txt
+example_obj/
