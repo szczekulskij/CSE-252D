@@ -3,9 +3,10 @@
 alias blender=/Applications/Blender.app/Contents/MacOS/Blender # pointer to blender executable
 
 # 1. Set following variables
+# filename="example_obj/Pbr/base.obj"  # path to 3d object file
 filename="example_obj/Pbr/base.obj"  # path to 3d object file
 num_images=10
-img_resolution=256
+img_resolution=512
 image_path= "/Users/szczekulskij/Desktop/blender_output" # path where rendered 2d images will get saved to
 
 # 2. If image path does not exist, create it

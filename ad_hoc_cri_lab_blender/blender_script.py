@@ -85,9 +85,19 @@ cam_constraint.track_axis = "TRACK_NEGATIVE_Z"
 cam_constraint.up_axis = "UP_Y"
 
 # setup lighting
-bpy.ops.object.light_add(type="AREA")
+bpy.ops.object.light_add(type="AREA", location=(0, 0, 3))
+light = bpy.data.lights["Area"]
+light.energy = 500  # Adjust brightness
+light.color = (1, 1, 1)  # Neutral white light
+
+
 light2 = bpy.data.lights["Area"]
 light2.energy = 3000
+
+bpy.ops.object.light_add(type="SUN", location=(5, 5, 5))
+sun = bpy.data.lights["Sun"]
+sun.energy = 2  # Sunlight is less intense
+
 bpy.data.objects["Area"].location[2] = 0.5
 bpy.data.objects["Area"].scale[0] = 100
 bpy.data.objects["Area"].scale[1] = 100
@@ -120,10 +130,28 @@ bpy.context.preferences.addons[
 processes = multiprocessing.cpu_count() - 2 # 2 is the number of threads that are always running
 
 
+# New changes to enable more color
+bpy.context.scene.view_settings.view_transform = 'Standard'
+
+
 
 #######################################################
 '''Below you can find helper functions specific to blender'''
 #######################################################
+
+def enable_colors_in_the_scene():
+    for obj in bpy.data.objects:
+        if obj.type == 'MESH':
+            for mat in obj.data.materials:
+                if not mat.node_tree:  # No shader nodes
+                    print(f"Material {mat.name} is missing nodes. Adding default shader.")
+                    mat.use_nodes = True
+                    bsdf = mat.node_tree.nodes.get('Principled BSDF')
+                    if bsdf:
+                        bsdf.inputs['Base Color'].default_value = (1, 1, 1, 1)  # White
+
+
+
 def reset_scene() -> None:
     """Resets the scene to a clean state."""
     # delete everything that isn't part of a camera or a light
@@ -260,8 +288,9 @@ def render_and_save_images_for_a_single_object(filepath, nr_images):
     scene.collection.objects.link(empty)
     cam_constraint.target = empty
 
-    randomize_lighting()
+    # randomize_lighting()
 
+    enable_colors_in_the_scene()
 
     
     # Unncessary code, keeping for tracking
